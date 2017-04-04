@@ -14,4 +14,4 @@ ADD . /mlab-stats
 WORKDIR /mlab-stats
 RUN pip3 install -r requirements.txt
 
-CMD gunicorn -w ${WORKERS} --threads ${THREADS} --bind 0.0.0.0:${PORT} --access-logfile - --error-logfile - wsgi:app
+CMD gunicorn -w ${WORKERS} --threads ${THREADS} --bind 0.0.0.0:${PORT} --access-logfile - --error-logfile - wsgi:app -k gevent --worker-connections 1000
