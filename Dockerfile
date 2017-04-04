@@ -14,4 +14,4 @@ ADD . /mlab-stats
 WORKDIR /mlab-stats
 RUN pip3 install -r requirements.txt
 
-CMD gunicorn --bind 0.0.0.0:${PORT} wsgi:app
+CMD gunicorn -w 4 --bind 0.0.0.0:${PORT} wsgi:app
