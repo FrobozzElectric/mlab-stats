@@ -1,5 +1,5 @@
 # mlabs-stats
-This is a simple service for getting stats over HTTP for a mongodb instance running in mlabs or anywhere the HTTP interface is disabled.
+This is a simple service for getting stats over HTTP for a mongodb instance running in mLab or anywhere the HTTP interface is disabled.
 
 # Usage
 ```shell
