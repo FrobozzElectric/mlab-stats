@@ -19,7 +19,6 @@ def get_stats():
         db_port = int(request.args.get('port'))
     except:
         return jsonify({'error': 'missing parameters'})
-#    print('mongodb://' + username + ':' + password + '@' + host + ':' + str(db_port) + '/' + database)
     try:
         client = MongoClient(host, db_port)
         db = client[database]
