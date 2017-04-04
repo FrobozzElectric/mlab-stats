@@ -10,12 +10,15 @@ def healthcheck():
 
 @app.route('/stats')
 def get_stats():
-    auth = request.authorization
-    username = auth.username
-    password = auth.password
-    host = request.args.get('host')
-    database = request.args.get('db')
-    db_port = int(request.args.get('port'))
+    try:
+        auth = request.authorization
+        username = auth.username
+        password = auth.password
+        host = request.args.get('host')
+        database = request.args.get('db')
+        db_port = int(request.args.get('port'))
+    except:
+        return jsonify({'error': 'missing parameters'})
 #    print('mongodb://' + username + ':' + password + '@' + host + ':' + str(db_port) + '/' + database)
     try:
         client = MongoClient(host, db_port)
