@@ -24,8 +24,8 @@ def get_stats():
         db = client[database]
         db.authenticate(username, password)
         stats = db.command('dbStats')
-    except:
-        raise
+    except Exception as error:
+        return str(error), 500
     return jsonify(stats)
 
 if __name__ == '__main__':
