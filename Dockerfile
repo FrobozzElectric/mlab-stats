@@ -2,6 +2,8 @@ FROM debian:latest
 
 # Set default environment variables
 ENV PORT=8000
+ENV THREADS=1
+ENV WORKERS=6
 
 EXPOSE ${PORT}
 
