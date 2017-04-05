@@ -24,6 +24,7 @@ def get_stats():
         db = client[database]
         db.authenticate(username, password)
         stats = db.command('dbStats')
+        stats['error'] = 'none'
     except Exception as error:
         return jsonify({'error': str(error)}), 500
     return jsonify(stats)
