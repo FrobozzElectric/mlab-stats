@@ -8,16 +8,16 @@ app = Flask(__name__)
 def healthcheck():
     return jsonify({'status': 'ok'})
 
-@app.route('/<host>:<db_port>/<database>/<command>')
+@app.route('/<host>:<int:db_port>/<database>/<command>')
 def run_command(host, db_port, database, command):
     try:
         auth = request.authorization
         username = auth.username
         password = auth.password
     except:
-        return jsonify({'error': 'missing parameters'}), 400
+        return jsonify({'error': 'missing credentials'}), 401
     try:
-        client = MongoClient(host, int(db_port))
+        client = MongoClient(host, db_port)
         db = client[database]
         db.authenticate(username, password)
         if request.args.get('arg'):
