@@ -23,7 +23,11 @@ def get_stats():
         client = MongoClient(host, db_port)
         db = client[database]
         db.authenticate(username, password)
-        stats = db.command('dbStats')
+        if request.args.get('collection'):
+            collection = request.args.get('collection')
+            stats = db.command('collstats', collection)
+        else:
+            stats = db.command('dbStats')
         stats['error'] = 'none'
     except Exception as error:
         return jsonify({'error': str(error)}), 500
