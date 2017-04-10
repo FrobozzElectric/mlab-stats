@@ -8,26 +8,23 @@ app = Flask(__name__)
 def healthcheck():
     return jsonify({'status': 'ok'})
 
-@app.route('/stats')
-def get_stats():
+@app.route('/<host>:<db_port>/<database>/<command>')
+def run_command(host, db_port, database, command):
     try:
         auth = request.authorization
         username = auth.username
         password = auth.password
-        host = request.args.get('host')
-        database = request.args.get('db')
-        db_port = int(request.args.get('port'))
     except:
-        return jsonify({'error': 'missing parameters'})
+        return jsonify({'error': 'missing parameters'}), 400
     try:
-        client = MongoClient(host, db_port)
+        client = MongoClient(host, int(db_port))
         db = client[database]
         db.authenticate(username, password)
-        if request.args.get('collection'):
-            collection = request.args.get('collection')
-            stats = db.command('collStats', collection)
+        if request.args.get('arg'):
+            arg = request.args.get('arg')
+            stats = db.command(command, arg)
         else:
-            stats = db.command('dbStats')
+            stats = db.command(command)
         stats['error'] = 'none'
     except Exception as error:
         return jsonify({'error': str(error)}), 500
