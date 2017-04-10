@@ -25,7 +25,7 @@ def get_stats():
         db.authenticate(username, password)
         if request.args.get('collection'):
             collection = request.args.get('collection')
-            stats = db.command('collstats', collection)
+            stats = db.command('collStats', collection)
         else:
             stats = db.command('dbStats')
         stats['error'] = 'none'
