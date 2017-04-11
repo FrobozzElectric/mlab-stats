@@ -1,12 +1,19 @@
 import json
+from bson import json_util
 from pymongo import MongoClient
-from flask import Flask, jsonify, request
+from flask import Flask, request, Response
 
 app = Flask(__name__)
 
+def json_resp(data, status):
+    return Response(json.dumps(data, 
+    default=json_util.default, indent=4),
+    mimetype="application/json",
+    status=status)
+
 @app.route('/_healthcheck')
 def healthcheck():
-    return jsonify({'status': 'ok'})
+    return json_resp({'status': 'ok'}, 200)
 
 @app.route('/<host>:<int:db_port>/<database>/<command>')
 def run_command(host, db_port, database, command):
@@ -15,20 +22,20 @@ def run_command(host, db_port, database, command):
         username = auth.username
         password = auth.password
     except:
-        return jsonify({'error': 'missing credentials'}), 401
+        return json_resp({'error': 'missing credentials'}, 401)
     try:
         client = MongoClient(host, db_port)
         db = client[database]
         db.authenticate(username, password)
         if request.args.get('arg'):
             arg = request.args.get('arg')
-            stats = db.command(command, arg)
+            data = db.command(command, arg)
         else:
-            stats = db.command(command)
-        stats['error'] = 'none'
+            data = db.command(command)
+        data['error'] = 'none'
     except Exception as error:
-        return jsonify({'error': str(error)}), 500
-    return jsonify(stats)
+        return json_resp({'error': str(error)}, 500)
+    return json_resp(data, 200)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
