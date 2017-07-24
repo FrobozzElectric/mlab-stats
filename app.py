@@ -1,4 +1,5 @@
 import json
+import time
 from bson import json_util
 from pymongo import MongoClient
 from flask import Flask, request, Response
@@ -13,6 +14,10 @@ def json_resp(data, status):
 
 @app.route('/_healthcheck')
 def healthcheck():
+    if request.args.get('delay'):
+        delay = request.args.get('delay')
+        print(delay)
+        time.sleep(int(delay))
     return json_resp({'status': 'ok'}, 200)
 
 @app.route('/<host>:<int:db_port>/<database>/<command>')
