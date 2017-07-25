@@ -24,7 +24,7 @@ def run_command(host, db_port, database, command):
     except:
         return json_resp({'error': 'missing credentials'}, 401)
     try:
-        client = MongoClient(host, db_port)
+        client = MongoClient(host, db_port, serverSelectionTimeoutMS=5000)
         db = client[database]
         db.authenticate(username, password)
         if request.args.get('arg'):
@@ -32,6 +32,7 @@ def run_command(host, db_port, database, command):
             data = db.command(command, arg)
         else:
             data = db.command(command)
+        client.close()
         data['error'] = 'none'
     except Exception as error:
         return json_resp({'error': str(error)}, 500)
