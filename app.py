@@ -1,9 +1,29 @@
 import json
 from bson import json_util
 from pymongo import MongoClient
-from flask import Flask, request, Response
+from flask import abort, Flask, jsonify, make_response, request, Response
 
 app = Flask(__name__)
+
+
+def abort_request(message, status):
+    abort(make_response(jsonify(error=message), status))
+
+def authenticate(request):
+    try:
+        if request.authorization:
+            auth = request.authorization
+            username = auth.username
+            password = auth.password
+        elif request.args.get('auth'):
+            auth = request.args.get('auth')
+            username = auth.split(':')[0]
+            password = auth.split(':')[1]
+        else:
+            abort_request('missing credentials', 401)
+    except:
+        abort_request('credentials in incorrect format', 400)
+    return username, password
 
 
 def mongo_find(collection, query, sort, limit):
@@ -33,21 +53,9 @@ def healthcheck():
 
 @app.route('/<host>:<int:db_port>/<database>/<collection>')
 def run_command(host, db_port, database, collection):
-    try:
-        if request.authorization:
-            auth = request.authorization
-            username = auth.username
-            password = auth.password
-        elif request.args.get('auth'):
-            auth = request.args.get('auth')
-            username = auth.split(':')[0]
-            password = auth.split(':')[1]
-        else:
-            return json_resp({'error': 'missing credentials'}, 401)
-    except:
-        return json_resp({'error': 'credentials in incorrect format'}, 401)
     if not request.args.get('query') and not request.args.get('command'):
-        return json_resp({'error': 'missing \'query\' or \'command\''}, 422)
+        abort_request('missing \'query\' or \'command\'', 422)
+    username, password = authenticate(request)
     try:
         data = {'error': None, 'results': []}
         client = MongoClient(host, db_port, serverSelectionTimeoutMS=5000)
@@ -75,7 +83,7 @@ def run_command(host, db_port, database, collection):
             data['results'].append(db.command(command))
         client.close()
     except Exception as error:
-        return json_resp({'error': str(error)}, 500)
+        abort_request(str(error), 500)
     return json_resp(data, 200)
 
 if __name__ == '__main__':
