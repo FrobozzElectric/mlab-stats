@@ -6,7 +6,7 @@ from flask import Flask, request, Response
 app = Flask(__name__)
 
 
-def mongo_find(collection, query, sort=None, limit=None):
+def mongo_find(collection, query, sort, limit):
     if limit and sort:
         return collection.find(query).sort(sort).limit(limit)
     elif sort:
@@ -15,6 +15,7 @@ def mongo_find(collection, query, sort=None, limit=None):
         return collection.find(query).limit(limit)
     else:
         return collection.find(query)
+
 
 def json_resp(data, status):
     return Response(
@@ -56,7 +57,10 @@ def run_command(host, db_port, database, collection):
         if request.args.get('query'):
             sort = None
             if request.args.get('sort'):
-                sort = request.args.get('sort')
+                sort_raw = json.loads(request.args.get('sort'))
+                sort = []
+                for key, value in sort_raw.items():
+                    sort.append((key, value))
             limit = None
             if request.args.get('limit'):
                 limit = int(request.args.get('limit'))
@@ -64,10 +68,10 @@ def run_command(host, db_port, database, collection):
             data['results'].append(list(mongo_find(
                 collection,
                 query,
-                sort=sort,
-                limit=limit)))
+                sort,
+                limit)))
         if request.args.get('command'):
-            command = request.args.get('command')
+            command = json.loads(request.args.get('command'))
             data['results'].append(db.command(command))
         client.close()
     except Exception as error:
