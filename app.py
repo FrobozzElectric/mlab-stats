@@ -17,9 +17,11 @@ def query(collection, request, data):
         sort = []
         for key, value in sort_raw.items():
             sort.append((key, value))
+
     limit = None
     if request.args.get('limit'):
         limit = int(request.args.get('limit'))
+
     query = json.loads(request.args.get('query'))
     data['results'].append(list(
             mongo_find(collection, query, sort, limit)))
@@ -61,20 +63,25 @@ def healthcheck():
 def connection_string():
     if not request.args.get('uri'):
         abort_request('missing \'uri\' parameter', 422)
+
     if not request.args.get('query') and not request.args.get('command'):
         abort_request('missing \'query\' or \'command\'', 422)
+
     uri = request.args.get('uri').strip('"').strip("'")
     try:
         client = MongoClient(uri, serverSelectionTimeoutMS=5000)
         data = {'error': None, 'results': []}
         db = client.get_default_database()
+
         if request.args.get('query'):
             if not request.args.get('collection'):
                 abort_request('missing \'collection\' parameter', 422)
             collection = db[request.args.get('collection')]
             data = query(collection, request, data)
+
         if request.args.get('command'):
             data = command(db, request, data)
+
         client.close()
     except Exception as error:
         abort_request(str(error), 500)
