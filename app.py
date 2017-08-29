@@ -9,21 +9,27 @@ app = Flask(__name__)
 def abort_request(message, status):
     abort(make_response(jsonify(error=message), status))
 
-def authenticate(request):
-    try:
-        if request.authorization:
-            auth = request.authorization
-            username = auth.username
-            password = auth.password
-        elif request.args.get('auth'):
-            auth = request.args.get('auth')
-            username = auth.split(':')[0]
-            password = auth.split(':')[1]
-        else:
-            abort_request('missing credentials', 401)
-    except:
-        abort_request('credentials in incorrect format', 400)
-    return username, password
+
+def query(collection, request, data):
+    sort = None
+    if request.args.get('sort'):
+        sort_raw = json.loads(request.args.get('sort'))
+        sort = []
+        for key, value in sort_raw.items():
+            sort.append((key, value))
+    limit = None
+    if request.args.get('limit'):
+        limit = int(request.args.get('limit'))
+    query = json.loads(request.args.get('query'))
+    data['results'].append(list(
+            mongo_find(collection, query, sort, limit)))
+    return data
+
+
+def command(db, request, data):
+    command = json.loads(request.args.get('command'))
+    data['results'].append(db.command(command))
+    return data
 
 
 def mongo_find(collection, query, sort, limit):
@@ -51,40 +57,29 @@ def healthcheck():
     return json_resp({'error': None}, 200)
 
 
-@app.route('/<host>:<int:db_port>/<database>/<collection>')
-def run_command(host, db_port, database, collection):
+@app.route('/')
+def connection_string():
+    if not request.args.get('uri'):
+        abort_request('missing \'uri\' parameter', 422)
     if not request.args.get('query') and not request.args.get('command'):
         abort_request('missing \'query\' or \'command\'', 422)
-    username, password = authenticate(request)
+    uri = request.args.get('uri').strip('"').strip("'")
     try:
+        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
         data = {'error': None, 'results': []}
-        client = MongoClient(host, db_port, serverSelectionTimeoutMS=5000)
-        db = client[database]
-        db.authenticate(username, password)
-        collection = db[collection]
+        db = client.get_default_database()
         if request.args.get('query'):
-            sort = None
-            if request.args.get('sort'):
-                sort_raw = json.loads(request.args.get('sort'))
-                sort = []
-                for key, value in sort_raw.items():
-                    sort.append((key, value))
-            limit = None
-            if request.args.get('limit'):
-                limit = int(request.args.get('limit'))
-            query = json.loads(request.args.get('query'))
-            data['results'].append(list(mongo_find(
-                collection,
-                query,
-                sort,
-                limit)))
+            if not request.args.get('collection'):
+                abort_request('missing \'collection\' parameter', 422)
+            collection = db[request.args.get('collection')]
+            data = query(collection, request, data)
         if request.args.get('command'):
-            command = json.loads(request.args.get('command'))
-            data['results'].append(db.command(command))
+            data = command(db, request, data)
         client.close()
     except Exception as error:
         abort_request(str(error), 500)
     return json_resp(data, 200)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
