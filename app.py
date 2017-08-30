@@ -36,14 +36,13 @@ def query(collection, args, data):
         limit = int(args.get('limit'))
 
     query = args.get('query')
-    data['results'].append(list(
-            mongo_find(collection, query, sort, limit)))
+    data['results'] = list(mongo_find(collection, query, sort, limit))
     return data
 
 
 def command(db, args, data):
     command = args.get('command')
-    data['results'].append(db.command(command))
+    data['results'] = db.command(command)
     return data
 
 
@@ -88,7 +87,7 @@ def connection_string():
     uri = args.get('uri').strip('"').strip("'")
     try:
         client = MongoClient(uri, serverSelectionTimeoutMS=5000)
-        data = {'code': 200, 'error': None, 'results': []}
+        data = {'code': 200, 'error': None, 'results': None}
         db = client.get_default_database()
 
         if type(args.get('query')) is dict:
