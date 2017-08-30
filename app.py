@@ -102,7 +102,6 @@ def connection_string():
 
         client.close()
     except Exception as error:
-        raise
         abort_request(str(error), 500)
     return json_resp(data, 200)
 
