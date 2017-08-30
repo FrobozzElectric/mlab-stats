@@ -20,7 +20,7 @@ def parser(args):
 
 
 def abort_request(message, status):
-    abort(make_response(jsonify(error=message), status))
+    abort(make_response(jsonify(error=message, code=status), status))
 
 
 def query(collection, args, data):
@@ -88,7 +88,7 @@ def connection_string():
     uri = args.get('uri').strip('"').strip("'")
     try:
         client = MongoClient(uri, serverSelectionTimeoutMS=5000)
-        data = {'error': None, 'results': []}
+        data = {'code': 200, 'error': None, 'results': []}
         db = client.get_default_database()
 
         if type(args.get('query')) is dict:
