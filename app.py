@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 
 def parser(args):
-    json_args = {'query', 'command' ,'sort'}
+    json_args = {'query', 'command', 'sort'}
     for arg in args:
         if arg in json_args:
             try:
