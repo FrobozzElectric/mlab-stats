@@ -10,7 +10,10 @@ def parser(args):
     json_args = {'query', 'command' ,'sort'}
     for arg in args:
         if arg in json_args:
-            args[arg] = json.loads(args[arg][0])
+            try:
+                args[arg] = json.loads(args[arg][0])
+            except:
+                abort_request('invalid JSON for \'' + arg + '\'', 422)
         else:
             args[arg] = args[arg][0]
     return args
@@ -79,7 +82,7 @@ def connection_string():
     if not args.get('uri'):
         abort_request('missing \'uri\' parameter', 422)
 
-    if not args.get('query') and not args.get('command'):
+    if not str(args.get('query')) and not str(args.get('command')):
         abort_request('missing \'query\' or \'command\'', 422)
 
     uri = args.get('uri').strip('"').strip("'")
@@ -88,17 +91,18 @@ def connection_string():
         data = {'error': None, 'results': []}
         db = client.get_default_database()
 
-        if args.get('query'):
+        if type(args.get('query')) is dict:
             if not args.get('collection'):
                 abort_request('missing \'collection\' parameter', 422)
             collection = db[args.get('collection')]
             data = query(collection, args, data)
 
-        if args.get('command'):
+        if type(args.get('command')) is dict:
             data = command(db, args, data)
 
         client.close()
     except Exception as error:
+        raise
         abort_request(str(error), 500)
     return json_resp(data, 200)
 
