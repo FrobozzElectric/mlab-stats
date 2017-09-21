@@ -92,7 +92,10 @@ def connection_string():
 
         if type(args.get('query')) is dict:
             if not args.get('collection'):
-                abort_request('missing \'collection\' parameter', 422)
+                """We can't 'abort' inside a try block."""
+                return (make_response(jsonify(
+                        error='missing \'collection\' parameter',
+                        code=422), 422))
             collection = db[args.get('collection')]
             data = query(collection, args, data)
 
