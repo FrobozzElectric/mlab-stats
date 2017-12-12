@@ -6,7 +6,7 @@ from flask import Flask, request, Response
 app = Flask(__name__)
 
 def json_resp(data, status):
-    return Response(json.dumps(data, 
+    return Response(json.dumps(data,
     default=json_util.default, indent=4),
     mimetype="application/json",
     status=status)
