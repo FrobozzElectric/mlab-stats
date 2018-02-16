@@ -68,7 +68,7 @@ def json_resp(data, status):
 
 @app.route('/_healthcheck')
 def healthcheck():
-    return json_resp({'error': None}, 200)
+    return json_resp({'error': 'ok'}, 200)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -87,7 +87,7 @@ def connection_string():
     uri = args.get('uri').strip('"').strip("'")
     try:
         client = MongoClient(uri, serverSelectionTimeoutMS=5000)
-        data = {'code': 200, 'error': None, 'results': None}
+        data = {'code': 200, 'error': 'ok', 'results': None}
         db = client.get_default_database()
 
         if type(args.get('query')) is dict:
